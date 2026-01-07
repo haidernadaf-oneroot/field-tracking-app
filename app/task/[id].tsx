@@ -134,6 +134,33 @@ export default function TaskDetails() {
   }, []);
 
   /* ================= STOP LOCATION ================= */
+  // const stopLocation = async () => {
+  //   if (!taskId) {
+  //     Alert.alert("Error", "Task ID missing");
+  //     return;
+  //   }
+
+  //   try {
+  //     const loc = await Location.getCurrentPositionAsync({});
+
+  //     setStoppedLocation({
+  //       latitude: loc.coords.latitude,
+  //       longitude: loc.coords.longitude,
+  //     });
+
+  //     await apiFetch(`/api/tasks/${taskId}/stop`, {
+  //       method: "PATCH",
+  //       body: JSON.stringify({
+  //         latitude: loc.coords.latitude,
+  //         longitude: loc.coords.longitude,
+  //       }),
+  //     });
+
+  //     Alert.alert("Success", "Stop location saved");
+  //   } catch (e: any) {
+  //     Alert.alert("Error", e.message || "Failed to save stop location");
+  //   }
+  // };
   const stopLocation = async () => {
     if (!taskId) {
       Alert.alert("Error", "Task ID missing");
@@ -141,6 +168,7 @@ export default function TaskDetails() {
     }
 
     try {
+      // 1. Get final location
       const loc = await Location.getCurrentPositionAsync({});
 
       setStoppedLocation({
@@ -148,6 +176,7 @@ export default function TaskDetails() {
         longitude: loc.coords.longitude,
       });
 
+      // 2. Update task with stop location
       await apiFetch(`/api/tasks/${taskId}/stop`, {
         method: "PATCH",
         body: JSON.stringify({
@@ -156,12 +185,18 @@ export default function TaskDetails() {
         }),
       });
 
-      Alert.alert("Success", "Stop location saved");
+      // 3. STOP BACKGROUND TRACKING
+      await Location.stopLocationUpdatesAsync("background-location-task");
+      await AsyncStorage.removeItem("activeTaskId");
+
+      console.log("🛑 Background tracking stopped");
+
+      Alert.alert("Success", "Stop location saved & tracking stopped");
     } catch (e: any) {
+      console.error("Stop location error:", e);
       Alert.alert("Error", e.message || "Failed to save stop location");
     }
   };
-
   /* ================= IMAGE PICK ================= */
   const pickImage = async () => {
     if (images.length >= 4) {
@@ -284,6 +319,27 @@ export default function TaskDetails() {
   };
 
   /* ================= COMPLETE TASK ================= */
+  // const completeTask = async () => {
+  //   if (!taskId) {
+  //     Alert.alert("Error", "Task ID missing");
+  //     return;
+  //   }
+
+  //   setIsCompleting(true);
+
+  //   try {
+  //     await apiFetch(`/api/tasks/${taskId}/complete`, {
+  //       method: "PATCH",
+  //     });
+
+  //     Alert.alert("Success", "Task Completed");
+  //     router.back();
+  //   } catch (e: any) {
+  //     Alert.alert("Error", e.message || "Failed to complete task");
+  //   } finally {
+  //     setIsCompleting(false);
+  //   }
+  // };
   const completeTask = async () => {
     if (!taskId) {
       Alert.alert("Error", "Task ID missing");
@@ -296,6 +352,10 @@ export default function TaskDetails() {
       await apiFetch(`/api/tasks/${taskId}/complete`, {
         method: "PATCH",
       });
+
+      // STOP TRACKING WHEN TASK IS DONE
+      await Location.stopLocationUpdatesAsync("background-location-task");
+      await AsyncStorage.removeItem("activeTaskId");
 
       Alert.alert("Success", "Task Completed");
       router.back();

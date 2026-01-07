@@ -1,17 +1,59 @@
-import { View, Text, StyleSheet } from "react-native";
+// app/reports.tsx
+import { View, Text, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useEffect, useState } from "react";
+import { apiFetch } from "@/services/api";
 
 export default function ReportsScreen() {
+  const [report, setReport] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadDailyReport();
+  }, []);
+
+  const loadDailyReport = async () => {
+    try {
+      const data = await apiFetch("/api/reports/daily");
+      setReport(data);
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "Failed to load report");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#f0fdf4" }}>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <ActivityIndicator size="large" color="#166534" />
+          <Text style={{ marginTop: 12, color: "#64748b" }}>
+            Loading report...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const totalSales = report?.totalSalesToday || 0;
+  const tasksCompleted = report?.completedTasksToday || 0;
+  const locationsVisited = report?.locationsVisitedToday || 0;
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f0fdf4" }}>
       <View style={styles.container}>
-        {/* SIMPLE HEADER */}
+        {/* HEADER */}
         <View style={styles.header}>
           <Text style={styles.title}>Daily Report</Text>
           <View style={styles.totalContainer}>
-            <Text style={styles.totalLabel}>Total Sales</Text>
-            <Text style={styles.totalAmount}>₹68,000</Text>
+            <Text style={styles.totalLabel}>Total Sales Today</Text>
+            <Text style={styles.totalAmount}>
+              ₹{totalSales.toLocaleString("en-IN")}
+            </Text>
           </View>
         </View>
 
@@ -24,26 +66,31 @@ export default function ReportsScreen() {
               size={28}
               color="#4d7c0f"
             />
-            <Text style={styles.metricValue}>6</Text>
+            <Text style={styles.metricValue}>{tasksCompleted}</Text>
             <Text style={styles.metricLabel}>Tasks Completed</Text>
           </View>
 
           {/* Locations Visited */}
           <View style={styles.metricCard}>
             <Ionicons name="location-outline" size={28} color="#4d7c0f" />
-            <Text style={styles.metricValue}>4</Text>
+            <Text style={styles.metricValue}>{locationsVisited}</Text>
             <Text style={styles.metricLabel}>Locations Visited</Text>
           </View>
 
-          {/* Total Sales (already shown in header, so smaller card) */}
+          {/* Total Sales Small Card */}
           <View style={[styles.metricCard, styles.salesCard]}>
             <MaterialIcons name="trending-up" size={28} color="#166534" />
-            <Text style={styles.metricValueSmall}>₹68K</Text>
+            <Text style={styles.metricValueSmall}>
+              ₹
+              {totalSales > 999
+                ? (totalSales / 1000).toFixed(1) + "K"
+                : totalSales}
+            </Text>
             <Text style={styles.metricLabel}>Today</Text>
           </View>
         </View>
 
-        {/* PLACEHOLDER FOR FUTURE */}
+        {/* FUTURE PLACEHOLDER */}
         <View style={styles.placeholder}>
           <Text style={styles.placeholderText}>
             Weekly & Monthly reports coming soon
@@ -57,10 +104,8 @@ export default function ReportsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0fdf4", // Soft green background
+    backgroundColor: "#f0fdf4",
   },
-
-  // Header (same pattern as SalesScreen)
   header: {
     backgroundColor: "#fff",
     padding: 20,
@@ -87,8 +132,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#166534",
   },
-
-  // Metrics (same card style as HomeScreen summary)
   metricsGrid: {
     padding: 16,
     flexDirection: "row",
@@ -107,7 +150,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   salesCard: {
-    backgroundColor: "#f0fdf4", // Light green tint for sales
+    backgroundColor: "#f0fdf4",
   },
   metricValue: {
     fontSize: 28,
@@ -126,7 +169,6 @@ const styles = StyleSheet.create({
     color: "#64748b",
     textAlign: "center",
   },
-
   placeholder: {
     flex: 1,
     justifyContent: "center",

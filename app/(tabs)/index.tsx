@@ -102,56 +102,103 @@ export default function HomeScreen() {
     }
   };
 
+  // const startTracking = async (taskId: string) => {
+  //   console.log("Starting tracking for task:", taskId);
+
+  //   try {
+  //     const { status } = await Location.requestForegroundPermissionsAsync();
+  //     if (status !== "granted") {
+  //       Alert.alert(
+  //         "Permission Required",
+  //         "Location access is needed to track visits."
+  //       );
+  //       return;
+  //     }
+
+  //     const loc = await Location.getCurrentPositionAsync({
+  //       accuracy: Location.Accuracy.High,
+  //     });
+
+  //     await apiFetch("/api/tracking", {
+  //       method: "POST",
+  //       body: JSON.stringify({
+  //         taskId,
+  //         latitude: loc.coords.latitude,
+  //         longitude: loc.coords.longitude,
+  //       }),
+  //     });
+
+  //     if (trackingIntervalRef.current) {
+  //       clearInterval(trackingIntervalRef.current);
+  //     }
+
+  //     trackingIntervalRef.current = setInterval(async () => {
+  //       try {
+  //         const updateLoc = await Location.getCurrentPositionAsync({
+  //           accuracy: Location.Accuracy.Balanced,
+  //         });
+  //         await apiFetch("/api/tracking", {
+  //           method: "POST",
+  //           body: JSON.stringify({
+  //             taskId,
+  //             latitude: updateLoc.coords.latitude,
+  //             longitude: updateLoc.coords.longitude,
+  //           }),
+  //         });
+  //       } catch (e) {
+  //         console.log("Background tracking failed:", e);
+  //       }
+  //     }, 5 * 1000);
+
+  //     // Correct navigation
+  //     router.push({
+  //       pathname: "/task/[id]",
+  //       params: { id: taskId },
+  //     });
+  //   } catch (err: any) {
+  //     Alert.alert("Error", err.message || "Failed to start tracking");
+  //   }
+  // };
   const startTracking = async (taskId: string) => {
-    console.log("Starting tracking for task:", taskId);
+    console.log("🚀 Starting tracking for task:", taskId);
 
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert(
-          "Permission Required",
-          "Location access is needed to track visits."
-        );
+        Alert.alert("Permission Required", "Location access is needed.");
         return;
       }
 
-      const loc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
-
+      // Optional: Send first location immediately
+      const { coords } = await Location.getCurrentPositionAsync({});
       await apiFetch("/api/tracking", {
         method: "POST",
         body: JSON.stringify({
           taskId,
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude,
+          latitude: coords.latitude,
+          longitude: coords.longitude,
         }),
       });
 
-      if (trackingIntervalRef.current) {
-        clearInterval(trackingIntervalRef.current);
-      }
+      // Save active task
+      await AsyncStorage.setItem("activeTaskId", taskId);
 
-      trackingIntervalRef.current = setInterval(async () => {
-        try {
-          const updateLoc = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-          });
-          await apiFetch("/api/tracking", {
-            method: "POST",
-            body: JSON.stringify({
-              taskId,
-              latitude: updateLoc.coords.latitude,
-              longitude: updateLoc.coords.longitude,
-            }),
-          });
-        } catch (e) {
-          console.log("Background tracking failed:", e);
-        }
-      }, 5 * 60 * 1000);
+      // Start background updates
+      await Location.startLocationUpdatesAsync("background-location-task", {
+        accuracy: Location.Accuracy.Balanced,
+        timeInterval: 5000, // Every 5 seconds
+        distanceInterval: 5, // Or every 5 meters
+        foregroundService: {
+          notificationTitle: "Field Visit Active",
+          notificationBody: "Tracking your location for task",
+          killServiceOnDestroy: true,
+        },
+        pausesUpdatesAutomatically: false,
+        showsBackgroundLocationIndicator: true,
+      });
 
-      // Correct navigation
-      router.push({
+      // Navigate to task details
+      router.navigate({
         pathname: "/task/[id]",
         params: { id: taskId },
       });
