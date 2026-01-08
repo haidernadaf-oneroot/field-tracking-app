@@ -1,4 +1,4 @@
-import type {} from "../tasks/background-location";
+import "../tasks/background-location"; // ✅ this actually runs the file
 
 import { Stack } from "expo-router";
 
