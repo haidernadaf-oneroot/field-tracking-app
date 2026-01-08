@@ -31,7 +31,15 @@
 
 // app/_layout.tsx
 
+// app/_layout.tsx
+// ← CRITICAL: Import and reference the task to force inclusion
 import "../tasks/background-location";
+
+// Add this dummy reference to prevent tree-shaking
+// This forces Metro to include the file in the bundle
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type {} from "../tasks/background-location";
+
 import { Stack } from "expo-router";
 
 export default function RootLayout() {
