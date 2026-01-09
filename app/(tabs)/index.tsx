@@ -264,7 +264,7 @@ export default function HomeScreen() {
             >
               <View style={styles.avatar}>
                 <Image
-                  source={require("../../assets/images/avatar.jpg")}
+                  source={require("../../assets/images/avatar.png")}
                   style={styles.avatarImage}
                 />
               </View>
@@ -284,12 +284,24 @@ export default function HomeScreen() {
         <View style={styles.summaryContainer}>
           <View style={styles.summaryHeader}>
             <Text style={styles.summaryTitle}>Today’s Summary</Text>
+          </View>
+
+          <View style={{ flexDirection: "row", gap: 10 }}>
             <TouchableOpacity
               style={styles.addTaskBtn}
               onPress={() => setModalVisible(true)}
             >
               <Ionicons name="add" size={18} color="#fff" />
               <Text style={styles.addTaskText}>Add Task</Text>
+            </TouchableOpacity>
+
+            {/* NEW INVENTORY BUTTON */}
+            <TouchableOpacity
+              style={styles.inventoryBtn}
+              onPress={() => router.push("/inventory")}
+            >
+              <Ionicons name="cube-outline" size={18} color="#fff" />
+              <Text style={styles.inventoryText}>Inventory</Text>
             </TouchableOpacity>
           </View>
 
@@ -432,6 +444,21 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#bbf7d0",
   },
+  inventoryBtn: {
+    flexDirection: "row",
+    backgroundColor: "#1e40af", // Dark blue for inventory
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignItems: "center",
+    gap: 6,
+    width: 170,
+    bottom: 5,
+  },
+  inventoryText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
   avatarImage: { width: "100%", height: "100%" },
   greeting: { fontSize: 24, fontWeight: "700", color: "#166534" },
   date: { color: "#64748b", fontSize: 15 },
@@ -453,6 +480,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   summaryTitle: { fontSize: 19, fontWeight: "700", color: "#1e293b" },
+
   addTaskBtn: {
     flexDirection: "row",
     backgroundColor: "#4d7c0f",
@@ -461,9 +489,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     gap: 6,
+    width: 170,
+    bottom: 5,
   },
+
   addTaskText: { color: "#fff", fontWeight: "600" },
-  summaryRow: { flexDirection: "row", gap: 14 },
+  summaryRow: { flexDirection: "row", gap: 14, marginTop: 10 },
   summaryItem: {
     flex: 1,
     backgroundColor: "#fff",

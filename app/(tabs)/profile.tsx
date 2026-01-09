@@ -21,7 +21,7 @@ const Explore = () => {
           {/* Avatar */}
           <View style={styles.avatarContainer}>
             <Image
-              source={require("../../assets/images/avatar.jpg")}
+              source={require("../../assets/images/avatar.png")}
               style={styles.avatarImage}
               resizeMode="cover"
             />
