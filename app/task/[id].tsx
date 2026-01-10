@@ -24,68 +24,86 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiFetch } from "@/services/api";
 
 /* ================= PRODUCTS (keep images for UI) ================= */
-const CROP_PRODUCTS: any = {
-  Turmeric: [
-    {
-      id: "t1",
-      name: "Rhizome Guard",
-      price: 150,
-      image: require("../../assets/images/product1.jpg"),
-    },
-    {
-      id: "t2",
-      name: "Curcuma Boost",
-      price: 220,
-      image: require("../../assets/images/product2.jpg"),
-    },
-  ],
-  "Tender Coconut": [
-    {
-      id: "tc1",
-      name: "Nutri Palm Liquid",
-      price: 120,
-      image: require("../../assets/images/product2.jpg"),
-    },
-    {
-      id: "tc2",
-      name: "Coco Yield Max",
-      price: 200,
-      image: require("../../assets/images/product4.jpg"),
-    },
-  ],
-  Maize: [
-    {
-      id: "m1",
-      name: "Maize Power Granules",
-      price: 140,
-      image: require("../../assets/images/product2.jpg"),
-    },
-    {
-      id: "m2",
-      name: "Leaf Growth Activator",
-      price: 155,
-      image: require("../../assets/images/product1.jpg"),
-    },
-  ],
-  Coconut: [
-    {
-      id: "c1",
-      name: "Palm Nutrient Mix",
-      price: 210,
-      image: require("../../assets/images/product4.jpg"),
-    },
-    {
-      id: "c2",
-      name: "Root Strength Plus",
-      price: 230,
-      image: require("../../assets/images/product1.jpg"),
-    },
-  ],
-};
+// const CROP_PRODUCTS: any = {
+//   Turmeric: [
+//     {
+//       id: "t1",
+//       name: "Rhizome Guard",
+//       price: 150,
+//       image: require("../../assets/images/product1.jpg"),
+//     },
+//     {
+//       id: "t2",
+//       name: "Curcuma Boost",
+//       price: 220,
+//       image: require("../../assets/images/product2.jpg"),
+//     },
+//   ],
+//   "Tender Coconut": [
+//     {
+//       id: "tc1",
+//       name: "Nutri Palm Liquid",
+//       price: 120,
+//       image: require("../../assets/images/product2.jpg"),
+//     },
+//     {
+//       id: "tc2",
+//       name: "Coco Yield Max",
+//       price: 200,
+//       image: require("../../assets/images/product4.jpg"),
+//     },
+//   ],
+//   Maize: [
+//     {
+//       id: "m1",
+//       name: "Maize Power Granules",
+//       price: 140,
+//       image: require("../../assets/images/product2.jpg"),
+//     },
+//     {
+//       id: "m2",
+//       name: "Leaf Growth Activator",
+//       price: 155,
+//       image: require("../../assets/images/product1.jpg"),
+//     },
+//   ],
+//   Coconut: [
+//     {
+//       id: "c1",
+//       name: "Palm Nutrient Mix",
+//       price: 210,
+//       image: require("../../assets/images/product4.jpg"),
+//     },
+//     {
+//       id: "c2",
+//       name: "Root Strength Plus",
+//       price: 230,
+//       image: require("../../assets/images/product1.jpg"),
+//     },
+//   ],
+// };
 
 export default function TaskDetails() {
   const params = useLocalSearchParams();
   const taskId = params.id as string;
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  // const cropProducts = allProducts.filter((p) => p.crop === crop);
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      const data = await apiFetch("/api/products");
+      setAllProducts(data);
+    } catch (e: any) {
+      Alert.alert("Error", "Failed to load products");
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
 
   // Debug log
   useEffect(() => {
@@ -313,9 +331,15 @@ export default function TaskDetails() {
       }
 
       // FIXED: Now matches backend schema exactly
+      // const products = validItems.map((item) => ({
+      //   product: item.product,
+      //   crop: crop,
+      //   price: item.price,
+      //   qty: Number(item.qty),
+      //   total: item.price * Number(item.qty),
+      // }));
       const products = validItems.map((item) => ({
-        product: item.product, // ← Changed from "name" to "product"
-        crop: crop, // ← Added crop type
+        product: item.product, // productId
         price: item.price,
         qty: Number(item.qty),
         total: item.price * Number(item.qty),
@@ -495,19 +519,20 @@ export default function TaskDetails() {
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Record Sale</Text>
 
-            <View style={styles.formGroup}>
+            {/* <View style={styles.formGroup}>
               <Text style={styles.label}>Crop Type</Text>
               <View style={styles.pickerWrapper}>
                 <Picker
                   selectedValue={crop}
                   onValueChange={(val) => setCrop(val)}
                 >
-                  {Object.keys(CROP_PRODUCTS).map((c) => (
+                
+                  {[...new Set(allProducts.map((p) => p.crop))].map((c) => (
                     <Picker.Item key={c} label={c} value={c} />
                   ))}
                 </Picker>
               </View>
-            </View>
+            </View> */}
 
             {items.map((item, index) => (
               <View key={index} style={styles.productCard}>
@@ -528,24 +553,46 @@ export default function TaskDetails() {
                   <Picker
                     selectedValue={item.product}
                     onValueChange={(val) => {
-                      const prod = CROP_PRODUCTS[crop].find(
-                        (p: any) => p.name === val
-                      );
+                      // const prod = CROP_PRODUCTS[crop].find(
+                      //   (p: any) => p.name === val
+                      // );
+                      const prod = allProducts.find((p: any) => p._id === val);
+
                       const updated = [...items];
+                      // updated[index] = {
+                      //   ...updated[index],
+                      //   product: val,
+                      //   price: prod?.price || 0,
+                      // };
                       updated[index] = {
                         ...updated[index],
-                        product: val,
+                        product: prod?._id || "",
                         price: prod?.price || 0,
                       };
+
                       setItems(updated);
                     }}
                   >
                     <Picker.Item label="Select Product" value="" />
-                    {CROP_PRODUCTS[crop].map((p: any) => (
+                    {/* {CROP_PRODUCTS[crop].map((p: any) => (
                       <Picker.Item
                         key={p.id}
                         label={`${p.name} (₹${p.price})`}
                         value={p.name}
+                      />
+                    ))} */}
+                    {/* {cropProducts.map((p: any) => (
+                      <Picker.Item
+                        key={p._id}
+                        label={`${p.name} (₹${p.price})`}
+                        value={p.name}
+                      />
+                    ))} */}
+                    {allProducts.map((p: any) => (
+                      <Picker.Item
+                        key={p._id}
+                        label={`${p.name} (${p.crop}) ₹${p.price}`}
+                        value={p._id}
                       />
                     ))}
                   </Picker>

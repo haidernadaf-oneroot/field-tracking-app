@@ -80,6 +80,25 @@ export default function HomeScreen() {
   const [taskTitle, setTaskTitle] = useState("");
   const [cropName, setCropName] = useState("");
   const [locationName, setLocationName] = useState("");
+  const [currentDate, setCurrentDate] = useState("");
+
+  useEffect(() => {
+    const updateDate = () => {
+      const date = new Date();
+      const options: Intl.DateTimeFormatOptions = {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      };
+      setCurrentDate(date.toLocaleDateString("en-IN", options)); // Indian format
+    };
+
+    updateDate();
+    // Optional: update at midnight
+    const interval = setInterval(updateDate, 60000); // every minute
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     loadTasks();
@@ -270,12 +289,17 @@ export default function HomeScreen() {
               </View>
               <View>
                 <Text style={styles.greeting}>Hi 👋</Text>
-                <Text style={styles.date}>Tuesday, January 6</Text>
+
+                <Text style={styles.date}>{currentDate}</Text>
               </View>
             </View>
             <View style={styles.weatherChip}>
-              <Ionicons name="partly-sunny-outline" size={18} color="#2563eb" />
-              <Text style={styles.weatherText}>28°C</Text>
+              {/* <Ionicons name="partly-sunny-outline" size={18} color="#2563eb" /> */}
+
+              <Image
+                source={require("../../assets/images/oneroot_backside2.png")}
+                style={styles.BrandImg}
+              />
             </View>
           </View>
         </View>
@@ -444,6 +468,15 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#bbf7d0",
   },
+
+  BrandImg: {
+    width: 80,
+    height: 30,
+    // borderRadius: 25,
+    overflow: "hidden",
+    // borderWidth: 2,
+    // borderColor: "#bbf7d0",
+  },
   inventoryBtn: {
     flexDirection: "row",
     backgroundColor: "#1e40af", // Dark blue for inventory
@@ -467,7 +500,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     backgroundColor: "#e0f2fe",
-    paddingHorizontal: 14,
+    paddingHorizontal: 8,
     paddingVertical: 8,
     borderRadius: 20,
   },
